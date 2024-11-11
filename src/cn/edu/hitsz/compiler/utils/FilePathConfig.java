@@ -25,6 +25,10 @@ public final class FilePathConfig {
      */
     public final static String LR1_TABLE_PATH = "data/in/LR1_table.csv";
 
+    /**
+     * 附加题的源代码
+     */
+    public final static String REG_Alloc_PATH = "data/in/reg-alloc.txt";
 
     //==================================== 输出文件 ========================================//
     /**
@@ -61,6 +65,11 @@ public final class FilePathConfig {
      * 汇编代码
      */
     public static final String ASSEMBLY_LANGUAGE_PATH = "data/out/assembly_language.asm";
+
+    /**
+     * 附加题汇编代码
+     */
+    public static final String REG_ALLOC_ASSEMBLY_PATH = "data/out/reg_alloc_assembly.asm";
 
     private FilePathConfig() {
     }

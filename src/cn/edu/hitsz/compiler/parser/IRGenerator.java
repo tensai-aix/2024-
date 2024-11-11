@@ -1,6 +1,7 @@
 package cn.edu.hitsz.compiler.parser;
 
 import cn.edu.hitsz.compiler.ir.IRImmediate;
+import cn.edu.hitsz.compiler.ir.IRValue;
 import cn.edu.hitsz.compiler.ir.IRVariable;
 import cn.edu.hitsz.compiler.ir.Instruction;
 import cn.edu.hitsz.compiler.lexer.Token;
@@ -13,6 +14,7 @@ import cn.edu.hitsz.compiler.utils.FileUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Stack;
 
 // TODO: 实验三: 实现 IR 生成
@@ -22,24 +24,16 @@ import java.util.Stack;
  */
 public class IRGenerator implements ActionObserver {
     private final List<Instruction> instructions = new ArrayList<>();
-    private SymbolTable symbolTable;
     private final Stack<Symbol> symbolStack = new Stack<>();
 
     @Override
     public void whenShift(Status currentStatus, Token currentToken) {
         TokenKind kind = currentToken.getKind();
-        switch (kind.getIdentifier()){
-            case "IntConst"->{
-                symbolStack.add(new Symbol(kind, Integer.parseInt(currentToken.getText())));
-            }
-            case "id"->{
-                Symbol symbol = new Symbol(kind, currentToken.getText());
-                symbol.setValue(symbolTable.getValue(currentToken.getText()));
-                symbolStack.add(symbol);
-            }
-            default -> {
-                symbolStack.add(new Symbol(kind));
-            }
+        if(Objects.equals(kind.getIdentifier(), "IntConst") || Objects.equals(kind.getIdentifier(), "id")){
+            symbolStack.add(new Symbol(kind, currentToken.getText()));
+        }
+        else{
+            symbolStack.add(new Symbol(kind));
         }
     }
 
@@ -53,32 +47,30 @@ public class IRGenerator implements ActionObserver {
         symbol.setSame(tmp_symbols.getFirst());
         switch (production.index()){   // 只用讨论涉及了值和名字的或中间代码生成的、body含有多个元素的production
             case 6: {   // S -> id = E;
-                instructions.add(Instruction.createMov(new IRVariable(tmp_symbols.get(2).getName()),new IRImmediate(tmp_symbols.getFirst().getValue())));
-                tmp_symbols.get(2).setValue(tmp_symbols.get(0).getValue());
-                symbolTable.updateValue(tmp_symbols.get(2).getName(), tmp_symbols.get(2).getValue());
+                instructions.add(Instruction.createMov(new IRVariable(tmp_symbols.get(2).getName()),getIRValue(tmp_symbols.getFirst())));
                 break;
             }
             case 7: {   // S -> return E;
-                instructions.add(Instruction.createRet(new IRImmediate(tmp_symbols.getFirst().getValue())));
+                instructions.add(Instruction.createRet(getIRValue(tmp_symbols.getFirst())));
                 break;
             }
             case 8: {   // E -> E + A;
-                symbol.setValue((tmp_symbols.getFirst().getValue()) + (tmp_symbols.get(2).getValue()));
-                instructions.add(Instruction.createAdd(new IRVariable(symbol.getName()),new IRImmediate((tmp_symbols.get(2).getValue())),new IRImmediate((tmp_symbols.get(0).getValue()))));
+                symbol.setName(IRVariable.temp().getName());
+                instructions.add(Instruction.createAdd(new IRVariable(symbol.getName()),getIRValue(tmp_symbols.get(2)),getIRValue(tmp_symbols.get(0))));
                 break;
             }
             case 9: {   // E -> E - A;
-                symbol.setValue((tmp_symbols.get(2).getValue()) - (tmp_symbols.get(0).getValue()));
-                instructions.add(Instruction.createSub(new IRVariable(symbol.getName()),new IRImmediate((tmp_symbols.get(2).getValue())),new IRImmediate((tmp_symbols.get(0).getValue()))));
+                symbol.setName(IRVariable.temp().getName());
+                instructions.add(Instruction.createSub(new IRVariable(symbol.getName()),getIRValue(tmp_symbols.get(2)),getIRValue(tmp_symbols.get(0))));
                 break;
             }
             case 11: {  // A -> A * B;
-                symbol.setValue((tmp_symbols.getFirst().getValue()) * (tmp_symbols.get(2).getValue()));
-                instructions.add(Instruction.createMul(new IRVariable(symbol.getName()),new IRImmediate((tmp_symbols.get(2).getValue())),new IRImmediate((tmp_symbols.get(0).getValue()))));
+                symbol.setName(IRVariable.temp().getName());
+                instructions.add(Instruction.createMul(new IRVariable(symbol.getName()),getIRValue(tmp_symbols.get(2)),getIRValue(tmp_symbols.get(0))));
                 break;
             }
             case 13: {  // B -> ( E );
-                symbol.setValue(tmp_symbols.get(1).getValue());
+                symbol.setName(tmp_symbols.get(1).getName());
                 break;
             }
         }
@@ -92,7 +84,6 @@ public class IRGenerator implements ActionObserver {
 
     @Override
     public void setSymbolTable(SymbolTable table) {
-        symbolTable = table;
     }
 
     public List<Instruction> getIR() {
@@ -103,5 +94,13 @@ public class IRGenerator implements ActionObserver {
         FileUtils.writeLines(path, getIR().stream().map(Instruction::toString).toList());
     }
 
-}
+    public IRValue getIRValue(Symbol symbol){    // 获取symbol对应的IRValue
+        if(symbol.getName().matches("\\d+")){   // 如果是数字，构造IRImmediate
+            return new IRImmediate(Integer.parseInt(symbol.getName()));
+        }
+        else{   // 否则构造IRVariable
+            return new IRVariable(symbol.getName());
+        }
+    }
 
+}

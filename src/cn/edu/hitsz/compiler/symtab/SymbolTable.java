@@ -13,7 +13,6 @@ import java.util.*;
  */
 public class SymbolTable {
     Map<String, SymbolTableEntry> map = new HashMap<>();
-    Map<String, Integer> value_map = new HashMap<>();
 
     /**
      * 获取符号表中已有的条目
@@ -45,7 +44,6 @@ public class SymbolTable {
         else{
             SymbolTableEntry entry = new SymbolTableEntry(text);
             map.put(text, entry);
-            value_map.put(text, 0);
             return entry;
         }
     }
@@ -97,26 +95,6 @@ public class SymbolTable {
             map.put(text, entry);
         }
     }
-
-    /**
-     * 修改符号表的标识符的数值
-     */
-    public void updateValue(String text,int value) {
-        if(value_map.containsKey(text)){
-            value_map.put(text, value);
-        }
-    }
-
-    /**
-     * 获取符号表的标识符的数值
-     */
-    public int getValue(String text) {
-        if(value_map.containsKey(text)){
-            return value_map.get(text);
-        }
-        return 0;
-    }
-
 
 }
 

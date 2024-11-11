@@ -4,7 +4,7 @@ import sys
 import os
 
 id_dict = {1: ["token.txt", "old_symbol_table.txt"], 2: ["parser_list.txt"], 3: [
-    "ir_emulate_result.txt", "new_symbol_table.txt"], 4: ["assembly_language.asm"]}
+    "ir_emulate_result.txt", "new_symbol_table.txt"], 4: ["assembly_language.asm","reg_alloc_assembly.asm"]}
 
 # 需要改为你自己的 rars.jar 路径
 rars_path = "D:\\大二下学业\\夏季学期\\hitsz-cs-cpu-main\\lab0-riscv-asm\\画图\\RARS.jar"
@@ -31,3 +31,5 @@ if __name__ == '__main__':
     if lab_id == 4:
         os.system(f"java -jar {rars_path} mc CompactDataAtZero a0 nc dec ae255 " +
                   os.path.join(out_dir, "assembly_language.asm"))
+        os.system(f"java -jar {rars_path} mc CompactDataAtZero a0 nc dec ae255 " +
+                          os.path.join(out_dir, "reg_alloc_assembly.asm"))
